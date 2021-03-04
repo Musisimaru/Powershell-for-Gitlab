@@ -69,5 +69,42 @@ function global:Set-GitlabProjectVisibility {
 
 }
 
+function global:Get-GitlabCurrentProject{
+    [CmdletBinding()]
+    param ()
+
+    BEGIN
+    {
+        if(-not $(Test-GitCmdEnvPath)){
+            throw "You have no git app found in your environment variable.`r`nYou can download the application at the link https://git-scm.com/downloads";
+        }
+
+        $originUrl = git config --get remote.origin.url
+
+        $uri = New-Object System.UriBuilder("$GITLAB_API_URL");
+        $uri.Path = $uri.Path.Replace("/api/v4", "");
+        $gitlabNodeUrl = $uri.Uri.AbsoluteUri
+
+        $request = $originUrl.Replace($gitlabNodeUrl, "").Replace(".git", "").Replace("/", " ");
+        
+        $ret = $null;
+    }
+    PROCESS
+    {
+        Write-Debug "request: $request"
+        $searchResult = Search-GitlabItems -Scope projects -SearchString $request
+
+        if($searchResult -eq $null){
+            throw "We could not find a rpoject with repository `"$originUrl`" on node `"$gitlabNodeUrl`""
+        }
+        $projectId = $searchResult.id
+        $ret = Get-GitlabProject -Id $projectId
+    }
+    END
+    {
+        return $ret
+    }
+}
+
 
 
