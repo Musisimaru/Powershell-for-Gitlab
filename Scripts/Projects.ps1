@@ -7,14 +7,14 @@ function global:Get-GitlabProject {
         [Parameter()]
         [ValidateSet('user', 'group')]
         [System.String]
-        $NamespaceKind  
-    )    
-    
+        $NamespaceKind
+    )
+
     $ret = Get-GitlabItems -EntityName projects -EntityId $Id
     if ($NamespaceKind) {
         $ret = $ret | where { $_.namespace.kind -eq $NamespaceKind }
     }
-    
+
     return $ret
 }
 
@@ -38,7 +38,7 @@ function global:Set-GitlabProjectVisibility {
         $headers = @{
             "PRIVATE-TOKEN" = $GITLAB_PRIVATE_TOKEN;
         }
-    
+
         $getParams = @(
             "visibility=$visibility"
         )
@@ -57,7 +57,7 @@ function global:Set-GitlabProjectVisibility {
 
         $uri.Query = [System.String]::Join("&", $getParams)
 
-        
+
     }
     PROCESS {
         Write-Debug $($uri.ToString())
@@ -86,13 +86,13 @@ function global:Get-GitlabCurrentProject{
         $gitlabNodeUrl = $uri.Uri.AbsoluteUri
 
         $request = $originUrl.Replace($gitlabNodeUrl, "").Replace(".git", "").Replace("/", " ");
-        
+
         $ret = $null;
     }
     PROCESS
     {
         Write-Debug "request: $request"
-        $searchResult = Search-GitlabItems -Scope projects -SearchString $request
+        $searchResult = Find-GitlabItems -Scope projects -SearchString $request
 
         if($searchResult -eq $null){
             throw "We could not find a rpoject with repository `"$originUrl`" on node `"$gitlabNodeUrl`""

@@ -9,7 +9,7 @@ function global:Get-Encoded([System.Object] $inputObject) {
     #Write-Debug "Input object count: $($inputObject.Count)"
     $jsonString = ($inputObject | ConvertTo-Json)
     #Write-Debug $jsonString
-    
+
     $encodedJsonString = [System.Text.Encoding]::Utf8.GetString([System.Text.Encoding]::GetEncoding("ISO-8859-1").GetBytes($jsonString)).replace("�", "x").replace("\u0085", "")
     #Write-Debug $encodedJsonString
 
@@ -37,7 +37,7 @@ function global:Get-GitlabItemsCount {
         $headers = @{
             "PRIVATE-TOKEN" = $GITLAB_PRIVATE_TOKEN;
         }
-    
+
         $getParams = @(
             "all=true"
             , "per_page=1"
@@ -55,7 +55,7 @@ function global:Get-GitlabItemsCount {
         $response = Invoke-WebRequest -Method Get -Uri $uri.ToString() -Headers $headers
     }
     END {
-        if ($response.StatusCode -ne 200) { return $null; }    
+        if ($response.StatusCode -ne 200) { return $null; }
         $countTotal = $response.Headers.'X-Total'
 
         return [System.Int32]::Parse($countTotal);
@@ -92,7 +92,7 @@ function global:Get-GitlabItems {
     BEGIN {
         Write-Debug "GITLAB_API_URL: $GITLAB_API_URL"
         $uri = New-Object System.UriBuilder("$GITLAB_API_URL/$EntityName");
-        
+
         if ($EntityId) {
             $uri.Path += "/$EntityId";
         }
@@ -120,23 +120,23 @@ function global:Get-GitlabItems {
                 , "per_page=100"
                 , "page=$page"
             )
-            
+
             if ($null -ne $Filters -and $Filters.Count -ne 0) {
                 $getParams = $getParams + $Filters
             }
-    
+
             $uri.Query = [System.String]::Join("&", $getParams)
-        
+
             $response = Invoke-WebRequest -Method Get -Uri $uri.ToString() -Headers $headers
             if ($response.StatusCode -ne 200) { return $null; }
-            
+
             $projectsOnPage = Get-Encoded $response.Content | ConvertFrom-Json
             $projectsOnPage | ForEach-Object {
                 $q = $ret.Add($_)
             }
-    
+
             $pagesCount = $response.Headers.'X-Total-Pages'
-    
+
         }while (++$page -le $pagesCount)
     }
     END {
@@ -157,10 +157,10 @@ function global:Get-GitlabAllSubItems {
         [ValidateNotNullOrEmpty()]
         [ValidateSet('projects', 'groups', 'epics', 'issues', 'milestones', 'todos', 'events', 'users', 'merge_requests', 'commits', 'keys', 'gpg_keys', 'memberships')]
         [System.String]
-        $SubEntityName,        
+        $SubEntityName,
 
         [Parameter(Mandatory)]
-        [System.Int32] 
+        [System.Int32]
         $EntityId,
 
         # Filter for request
@@ -189,31 +189,111 @@ function global:Get-GitlabAllSubItems {
                 , "per_page=100"
                 , "page=$page"
             )
-            
+
             if ($null -ne $filters -and $filters.Count -ne 0) {
                 $getParams = $getParams + $filters
             }
-    
+
             $uri.Query = [System.String]::Join("&", $getParams)
-    
+
             Write-Debug "uri: $($uri.ToString())"
-        
+
             $response = Invoke-WebRequest -Method Get -Uri $uri.ToString() -Headers $headers
             if ($response.StatusCode -ne 200) { return $null; }
-            
+
             $projectsOnPage = Get-Encoded $response.Content | ConvertFrom-Json
             $projectsOnPage | % {
                 $q = $ret.Add($_)
             }
-    
+
             $pagesCount = $response.Headers.'X-Total-Pages'
-    
+
         }while (++$page -le $pagesCount)
     }
     END {
         return $ret
     }
 }
+
+function global:Get-GitlabSubItems {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory)]
+        [ValidateNotNullOrEmpty()]
+        [ValidateSet('projects', 'groups', 'epics', 'issues', 'milestones', 'todos', 'events', 'users', 'merge_requests', 'commits')]
+        [System.String]
+        $EntityName,
+
+        [Parameter(Mandatory)]
+        [ValidateNotNullOrEmpty()]
+        [ValidateSet('projects', 'groups', 'epics', 'issues', 'milestones', 'todos', 'events', 'users', 'merge_requests', 'commits', 'keys', 'gpg_keys', 'memberships')]
+        [System.String]
+        $SubEntityName,
+
+        [Parameter(Mandatory)]
+        [System.Int32]
+        $EntityId,
+
+        [Parameter(Mandatory)]
+        [System.Int32]
+        $SubEntityId,
+
+        # Filter for request
+        [Parameter()]
+        [ValidateNotNullOrEmpty()]
+        [System.String[]]
+        $Filters
+    )
+
+    BEGIN {
+        $uri = New-Object System.UriBuilder("$GITLAB_API_URL/$entityName/$EntityId/$SubEntityName")
+        $headers = @{
+            "PRIVATE-TOKEN" = $GITLAB_PRIVATE_TOKEN;
+        }
+
+        if ($SubEntityId) {
+            $uri.Path += "/$SubEntityId";
+        }
+
+        $page = 1
+        $pagesCount = 1
+
+        $ret = New-Object System.Collections.Generic.HashSet[PSObject]
+    }
+    PROCESS {
+        do {
+            Write-Debug "Page: $page; Count: $pagesCount;"
+            $getParams = @(
+                "all=true"
+                , "per_page=100"
+                , "page=$page"
+            )
+
+            if ($null -ne $filters -and $filters.Count -ne 0) {
+                $getParams = $getParams + $filters
+            }
+
+            $uri.Query = [System.String]::Join("&", $getParams)
+
+            Write-Debug "uri: $($uri.ToString())"
+
+            $response = Invoke-WebRequest -Method Get -Uri $uri.ToString() -Headers $headers
+            if ($response.StatusCode -ne 200) { return $null; }
+
+            $projectsOnPage = Get-Encoded $response.Content | ConvertFrom-Json
+            $projectsOnPage | % {
+                $q = $ret.Add($_)
+            }
+
+            $pagesCount = $response.Headers.'X-Total-Pages'
+
+        }while (++$page -le $pagesCount)
+    }
+    END {
+        return $ret
+    }
+}
+
 
 function global:Set-GitlabApiUrl([System.String] $url) {
     $uri = New-Object System.URI($url);
@@ -253,13 +333,13 @@ function global:Find-GitlabItems {
     BEGIN {
         Write-Debug "GITLAB_API_URL: $GITLAB_API_URL"
         $uri = New-Object System.UriBuilder("$GITLAB_API_URL/search");
-        
+
         Write-Debug "Path $($uri.Path)"
 
         $headers = @{
             "PRIVATE-TOKEN" = $GITLAB_PRIVATE_TOKEN;
         }
-            
+
         $getParams = @(
             "scope=$Scope"
             , "search=$SearchString"
@@ -269,14 +349,14 @@ function global:Find-GitlabItems {
     }
     PROCESS {
         $uri.Query = [System.String]::Join("&", $getParams)
-        
+
         $response = Invoke-WebRequest -Method Get -Uri $uri.ToString() -Headers $headers
         if ($response.StatusCode -ne 200) { return $null; }
-            
+
         $responseItems = Get-Encoded $response.Content | ConvertFrom-Json
         $responseItems | ForEach-Object {
             $q = $ret.Add($_)
-        }        
+        }
     }
     END {
         return $ret
