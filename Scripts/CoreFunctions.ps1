@@ -5,7 +5,7 @@ if(-not $(Test-Path "Variable:GITLAB_PRIVATE_TOKEN")){
     $Global:GITLAB_PRIVATE_TOKEN = [System.String]::Empty;
 }
 
-function global:Get-Encoded([System.Object] $inputObject) {
+function Get-Encoded([System.Object] $inputObject) {
     #Write-Debug "Input object count: $($inputObject.Count)"
     $jsonString = ($inputObject | ConvertTo-Json)
     #Write-Debug $jsonString
@@ -17,7 +17,7 @@ function global:Get-Encoded([System.Object] $inputObject) {
     return $outputObject
 }
 
-function global:Get-GitlabItemsCount {
+function Get-GitlabItemsCount {
     [CmdletBinding()]
     param (
         [Parameter(Mandatory)]
@@ -63,7 +63,7 @@ function global:Get-GitlabItemsCount {
 }
 
 
-function global:Get-GitlabItems {
+function Get-GitlabItems {
     [CmdletBinding()]
     param (
         [Parameter(Mandatory)]
@@ -144,7 +144,7 @@ function global:Get-GitlabItems {
     }
 }
 
-function global:Get-GitlabAllSubItems {
+function Get-GitlabAllSubItems {
     [CmdletBinding()]
     param (
         [Parameter(Mandatory)]
@@ -215,7 +215,7 @@ function global:Get-GitlabAllSubItems {
     }
 }
 
-function global:Get-GitlabSubItems {
+function Get-GitlabSubItems {
     [CmdletBinding()]
     param (
         [Parameter(Mandatory)]
@@ -295,7 +295,7 @@ function global:Get-GitlabSubItems {
 }
 
 
-function global:Set-GitlabApiUrl([System.String] $url) {
+function Set-GitlabApiUrl([System.String] $url) {
     $uri = New-Object System.URI($url);
     if (-not ($uri.LocalPath.Contains('/api/v4'))) {
         throw "Url $url is not correct. Must contain `"/api/v4`"";
@@ -304,17 +304,17 @@ function global:Set-GitlabApiUrl([System.String] $url) {
     $Global:GITLAB_API_URL = $url;
 }
 
-function global:Set-Token([System.String] $token) {
+function Set-Token([System.String] $token) {
     $Global:GITLAB_PRIVATE_TOKEN = $token;
 }
 
-function global:Test-GitCmdEnvPath {
+function Test-GitCmdEnvPath {
     $path = $env:Path.Split(";") | where { $_.ToLower().Contains('git\cmd') }
     return $path.Length -gt 0;
 }
 
 
-function global:Find-GitlabItems {
+function Find-GitlabItems {
     [CmdletBinding()]
     param (
         [Parameter(Mandatory)]

@@ -1,4 +1,4 @@
-function global:Get-GitlabProject {
+function Get-GitlabProject {
     [CmdletBinding()]
     param (
         [Parameter()]
@@ -18,7 +18,7 @@ function global:Get-GitlabProject {
     return $ret
 }
 
-function global:Set-GitlabProjectVisibility {
+function Set-GitlabProjectVisibility {
     [CmdletBinding()]
     param (
         [Parameter(Mandatory)]
@@ -69,7 +69,7 @@ function global:Set-GitlabProjectVisibility {
 
 }
 
-function global:Get-GitlabCurrentProject{
+function Get-GitlabCurrentProject{
     [CmdletBinding()]
     param ()
 

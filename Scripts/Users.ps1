@@ -1,4 +1,4 @@
-function global:Get-GitlabUser{
+function Get-GitlabUser{
     [CmdletBinding()]
     param (
         [Parameter()]
@@ -14,12 +14,12 @@ function global:Get-GitlabUser{
         $ret = Get-GitlabItems -EntityName user
         return $ret
     }
-    
+
     $ret = Get-GitlabItems -EntityName users -EntityId $Id
     return $ret
 }
 
-function global:Get-GitlabSSHKey {
+function Get-GitlabSSHKey {
     param (
         # Is Current User
         [Parameter()]
@@ -37,7 +37,7 @@ function global:Get-GitlabSSHKey {
     if($CurrentUser){
         if($KeyId){
             $ret = Get-GitlabItems -EntityName user -SubPath "keys/$KeyId"
-            return $ret    
+            return $ret
         }
 
         $ret = Get-GitlabItems -EntityName user -SubPath keys
@@ -48,7 +48,7 @@ function global:Get-GitlabSSHKey {
     return $ret
 }
 
-function global:Get-GitlabGPGKey {
+function Get-GitlabGPGKey {
     param (
         # Is Current User
         [Parameter()]
@@ -66,7 +66,7 @@ function global:Get-GitlabGPGKey {
     if($CurrentUser){
         if($KeyId){
             $ret = Get-GitlabItems -EntityName user -SubPath "gpg_keys/$KeyId"
-            return $ret    
+            return $ret
         }
 
         $ret = Get-GitlabItems -EntityName user -SubPath gpg_keys
@@ -77,6 +77,6 @@ function global:Get-GitlabGPGKey {
     return $ret
 }
 
-function global:Get-GitlabUserActivities {
+function Get-GitlabUserActivities {
     Get-GitlabItems -EntityName user -SubPath activities
 }

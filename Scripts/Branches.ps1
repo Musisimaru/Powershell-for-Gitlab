@@ -1,4 +1,4 @@
-function global:CheckOut-GitlabBranch{
+function CheckOut-GitlabBranch{
     [CmdletBinding()]
     param (
         [Parameter()]
