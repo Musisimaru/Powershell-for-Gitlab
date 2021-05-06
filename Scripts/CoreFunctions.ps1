@@ -155,7 +155,7 @@ function Get-GitlabAllSubItems {
 
     [Parameter(Mandatory)]
     [ValidateNotNullOrEmpty()]
-    [ValidateSet('projects', 'groups', 'epics', 'issues', 'milestones', 'todos', 'events', 'users', 'merge_requests', 'commits', 'keys', 'gpg_keys', 'memberships', 'repository/branches')]
+    [ValidateSet('projects', 'groups', 'epics', 'issues', 'milestones', 'todos', 'events', 'users', 'merge_requests', 'commits', 'keys', 'gpg_keys', 'memberships', 'repository/branches', 'environments')]
     [System.String]
     $SubEntityName,
 
@@ -226,7 +226,7 @@ function Get-GitlabSubItems {
 
     [Parameter(Mandatory)]
     [ValidateNotNullOrEmpty()]
-    [ValidateSet('projects', 'groups', 'epics', 'issues', 'milestones', 'todos', 'events', 'users', 'merge_requests', 'commits', 'keys', 'gpg_keys', 'memberships', 'repository/branches')]
+    [ValidateSet('projects', 'groups', 'epics', 'issues', 'milestones', 'todos', 'events', 'users', 'merge_requests', 'commits', 'keys', 'gpg_keys', 'memberships', 'repository/branches', 'environments')]
     [System.String]
     $SubEntityName,
 
@@ -286,6 +286,75 @@ function Get-GitlabSubItems {
 
       $projectsOnPage = Get-Encoded $response.Content | ConvertFrom-Json
       $projectsOnPage | % {
+        $q = $ret.Add($_)
+      }
+
+      $pagesCount = $response.Headers.'X-Total-Pages'
+
+    }while (++$page -le $pagesCount)
+  }
+  END {
+    return $ret
+  }
+}
+
+function Push-GitlabSubItemsAction {
+  [CmdletBinding()]
+  param (
+    [Parameter(Mandatory)]
+    [ValidateNotNullOrEmpty()]
+    [ValidateSet('projects', 'groups', 'epics', 'issues', 'milestones', 'todos', 'events', 'users', 'merge_requests', 'commits')]
+    [System.String]
+    $EntityName,
+
+    [Parameter(Mandatory)]
+    [ValidateNotNullOrEmpty()]
+    [ValidateSet('projects', 'groups', 'epics', 'issues', 'milestones', 'todos', 'events', 'users', 'merge_requests', 'commits', 'keys', 'gpg_keys', 'memberships', 'repository/branches', 'environments')]
+    [System.String]
+    $SubEntityName,
+
+    [Parameter(Mandatory)]
+    [System.Int32]
+    $EntityId,
+
+    [Parameter(Mandatory)]
+    [object]
+    $SubEntityId,
+
+    [Parameter(Mandatory)]
+    [ValidateNotNullOrEmpty()]
+    [ValidateSet('stop')]
+    [System.String]
+    $ActionName
+  )
+
+  BEGIN {
+    $uri = New-Object System.UriBuilder("$GITLAB_API_URL/$entityName/$EntityId/$SubEntityName")
+    $headers = @{
+      "PRIVATE-TOKEN" = $GITLAB_PRIVATE_TOKEN;
+    }
+
+    if($SubEntityId -and -not ($SubEntityId -is [System.Int32] -or $SubEntityId -is [System.String])){
+      throw "SubEntityId must be have type Int32 or String";
+    }
+
+    if ($SubEntityId) {
+      $uri.Path += "/$SubEntityId";
+    }
+
+    $uri.Path += "/$ActionName";
+
+    $ret = New-Object System.Collections.Generic.HashSet[PSObject]
+  }
+  PROCESS {
+    do {
+      Write-Debug "uri: $($uri.ToString())"
+
+      $response = Invoke-WebRequest -Method Post -Uri $uri.ToString() -Headers $headers
+      if ($response.StatusCode -ne 200) { return $null; }
+
+      $projectsOnPage = Get-Encoded $response.Content | ConvertFrom-Json
+      $projectsOnPage | ForEach-Object {
         $q = $ret.Add($_)
       }
 
