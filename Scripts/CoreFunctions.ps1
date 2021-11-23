@@ -234,8 +234,8 @@ function Get-GitlabSubItems {
     [System.Int32]
     $EntityId,
 
-    [Parameter(Mandatory)]
-    [object]
+    [Parameter()]
+    [System.Int32]
     $SubEntityId,
 
     # Filter for request
