@@ -294,7 +294,94 @@ function Get-GitlabSubItems {
   }
 }
 
+function Get-GitlabSubSubItems {
+  [CmdletBinding()]
+  param (
+    [Parameter(Mandatory)]
+    [ValidateNotNullOrEmpty()]
+    [ValidateSet('projects', 'groups', 'epics', 'issues', 'milestones', 'todos', 'events', 'users', 'merge_requests', 'commits')]
+    [System.String]
+    $EntityName,
 
+    [Parameter(Mandatory)]
+    [ValidateNotNullOrEmpty()]
+    [ValidateSet('projects', 'groups', 'epics', 'issues', 'milestones', 'todos', 'events', 'users', 'merge_requests', 'commits', 'keys', 'gpg_keys', 'memberships', 'repository/branches', 'environments')]
+    [System.String]
+    $SubEntityName,
+
+    [Parameter(Mandatory)]
+    [ValidateNotNullOrEmpty()]
+    [ValidateSet('notes')]
+    [System.String]
+    $SubSubEntityName,
+
+    [Parameter(Mandatory)]
+    [System.Int32]
+    $EntityId,
+
+    [Parameter(Mandatory)]
+    [System.Int32]
+    $SubEntityId,
+
+    [Parameter()]
+    [System.Int32]
+    $SubSubEntityId,
+
+    # Filter for request
+    [Parameter()]
+    [ValidateNotNullOrEmpty()]
+    [System.String[]]
+    $Filters
+  )
+
+  BEGIN {
+    $uri = New-Object System.UriBuilder("$GITLAB_API_URL/$entityName/$EntityId/$SubEntityName/$SubEntityId/$SubSubEntityName")
+    $headers = @{
+      "PRIVATE-TOKEN" = $GITLAB_PRIVATE_TOKEN;
+    }
+
+    if ($SubSubEntityId) {
+      $uri.Path += "/$SubSubEntityId";
+    }
+
+    $page = 1
+    $pagesCount = 1
+
+    $ret = New-Object System.Collections.Generic.HashSet[PSObject]
+  }
+  PROCESS {
+    do {
+      Write-Debug "Page: $page; Count: $pagesCount;"
+      $getParams = @(
+        "all=true"
+        , "per_page=100"
+        , "page=$page"
+      )
+
+      if ($null -ne $filters -and $filters.Count -ne 0) {
+        $getParams = $getParams + $filters
+      }
+
+      $uri.Query = [System.String]::Join("&", $getParams)
+
+      Write-Debug "uri: $($uri.ToString())"
+
+      $response = Invoke-WebRequest -Method Get -Uri $uri.ToString() -Headers $headers
+      if ($response.StatusCode -ne 200) { return $null; }
+
+      $projectsOnPage = Get-Encoded $response.Content | ConvertFrom-Json
+      $projectsOnPage | % {
+        $q = $ret.Add($_)
+      }
+
+      $pagesCount = $response.Headers.'X-Total-Pages'
+
+    }while (++$page -le $pagesCount)
+  }
+  END {
+    return $ret
+  }
+}
 
 function Push-GitlabSubItemsAction {
   [CmdletBinding()]
