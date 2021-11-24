@@ -251,10 +251,6 @@ function Get-GitlabSubItems {
       "PRIVATE-TOKEN" = $GITLAB_PRIVATE_TOKEN;
     }
 
-    if($SubEntityId -and -not ($SubEntityId -is [System.Int32] -or $SubEntityId -is [System.String])){
-      throw "SubEntityId must be have type Int32 or String";
-    }
-
     if ($SubEntityId) {
       $uri.Path += "/$SubEntityId";
     }
@@ -297,6 +293,8 @@ function Get-GitlabSubItems {
     return $ret
   }
 }
+
+
 
 function Push-GitlabSubItemsAction {
   [CmdletBinding()]
