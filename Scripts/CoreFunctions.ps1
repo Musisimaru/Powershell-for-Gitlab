@@ -311,7 +311,7 @@ function Get-GitlabSubSubItems {
 
     [Parameter(Mandatory)]
     [ValidateNotNullOrEmpty()]
-    [ValidateSet('notes')]
+    [ValidateSet('notes', 'related_merge_requests', 'closed_by')]
     [System.String]
     $SubSubEntityName,
 

@@ -62,3 +62,38 @@
     return $ret;
   }
 }
+
+
+function Get-GitlabIssueRelatedMRs {
+  [CmdletBinding()]
+  param (
+    [Parameter(Mandatory)]
+    [System.Int32]
+    $ProjectId,
+
+    [Parameter(Mandatory)]
+    [System.Int32]
+    $issueId
+  )
+
+  Write-Debug "$ProjectId - $issueId";
+  $ret = Get-GitlabSubSubItems -EntityName projects -EntityId $ProjectId -SubEntityName issues -SubEntityId $issueId -SubSubEntityName related_merge_requests
+  return $ret;
+}
+
+function Get-GitlabIssueClosedByMRs {
+  [CmdletBinding()]
+  param (
+    [Parameter(Mandatory)]
+    [System.Int32]
+    $ProjectId,
+
+    [Parameter(Mandatory)]
+    [System.Int32]
+    $issueId
+  )
+
+  Write-Debug "$ProjectId - $issueId";
+  $ret = Get-GitlabSubSubItems -EntityName projects -EntityId $ProjectId -SubEntityName issues -SubEntityId $issueId -SubSubEntityName closed_by
+  return $ret;
+}
