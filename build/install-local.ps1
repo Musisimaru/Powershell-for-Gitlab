@@ -1,14 +1,13 @@
 $pathes = [Environment]::GetEnvironmentVariable("PSModulePath");
-$path = $pathes -split ";" | Where-Object { $_.ToLower().contains('users') }
+$path = $pathes -split [IO.Path]::PathSeparator | Where-Object { $_.ToLower().contains('users') }
 
 if($path -is [array]){
   $path = $path[0]
 }
 
-$path = "$path\powershell-for-gitlab";
-Write-Host "Removing folder $path"
-Remove-Item -Recurse -Force $path -ErrorAction Ignore
+$path = Join-Path $path "powershell-for-gitlab"
+Remove-Item -Recurse -Force $path -ErrorAction Ignore -Verbose
 
-Write-Host "Copying from  $PSScriptRoot\..\Scripts"
-Copy-Item ".\Scripts" -Destination "$path\Scripts" -Recurse
-Copy-Item ".\powershell-for-gitlab.psd1" -Destination "$path"
+$root = Join-Path $PSScriptRoot ".."
+Copy-Item -Path (Join-Path $root "Scripts") -Destination (Join-Path $path "Scripts") -Recurse -Verbose
+Copy-Item -Path (Join-Path $root "powershell-for-gitlab.psd1") -Destination $path -Verbose
