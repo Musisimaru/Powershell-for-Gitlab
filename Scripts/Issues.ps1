@@ -10,6 +10,10 @@
     $UserId,
 
     [Parameter()]
+    [System.Int32]
+    $IterationId,
+
+    [Parameter()]
     [ValidateSet('closed', 'opened')]
     [System.String]
     $State
@@ -40,7 +44,10 @@
       $quiet = $filters.Add("assignee_id=$UserId");
     }
 
-
+    if ($IterationId -ne $null -and $IterationId -ne 0) {
+      Write-Debug "Iteration `"$IterationId`""
+      $quiet = $filters.Add("iteration_id=$IterationId");
+    }
 
     $ret = New-Object System.Collections.Generic.HashSet[PSCustomObject]
   }
