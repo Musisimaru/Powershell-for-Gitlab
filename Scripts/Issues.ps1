@@ -104,3 +104,31 @@ function Get-GitlabIssueClosedByMRs {
   $ret = Get-GitlabSubSubItems -EntityName projects -EntityId $ProjectId -SubEntityName issues -SubEntityId $issueId -SubSubEntityName closed_by
   return $ret;
 }
+
+function Push-NewGitlabIssue(){
+  [CmdletBinding()]
+  param (
+    [Parameter(Mandatory)]
+    [System.Int32]
+    $ProjectId,
+
+    [Parameter(Mandatory)]
+    [System.Object]
+    $newIssue
+  )
+
+  BEGIN {
+    $uri = New-Object System.UriBuilder("$GITLAB_API_URL/projects/$ProjectId/issues")
+    $headers = @{
+      "PRIVATE-TOKEN" = $GITLAB_PRIVATE_TOKEN;
+    }
+    $ret = $null
+  }
+  PROCESS {
+    Write-Debug "uri: $($uri.ToString())"
+    $ret = Invoke-WebRequest -Method Post -Uri $uri.ToString() -Body $newIssue -Headers $headers
+  }
+  END{
+    return $($ret.Content | ConvertFrom-Json);
+  }
+}
